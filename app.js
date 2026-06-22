@@ -117,11 +117,7 @@ async function initFirebaseSync() {
 
   fb.onSnapshot(ref, (docSnap) => {
     if (docSnap.exists()) {
-      window.store = {
-        ...structuredClone(starterData),
-        ...docSnap.data(),
-        products: Array.isArray(docSnap.data()?.products) ? docSnap.data().products : [],
-      };
+      window.store = docSnap.data();
       render();
     }
   });
@@ -172,16 +168,6 @@ async function save() {
 
     // Only sync to Firestore when Firebase is loaded and a user is signed in.
     if (fb?.db && fb.auth?.currentUser) {
-      const storeSize = new Blob([JSON.stringify(window.store)]).size;
-
-      if (storeSize > 900000) {
-        const msg = "⚠️ Store is getting too large for Firebase. Try using smaller images or removing old products.";
-        console.warn(msg, "Current size:", storeSize, "bytes");
-        setState({ toast: msg });
-        clearToast();
-        return;
-      }
-
       await fb.setDoc(
         fb.doc(fb.db, "stores", "main"),
         window.store
@@ -201,13 +187,6 @@ async function forceCloudSave() {
     return;
   }
   try {
-    const storeSize = new Blob([JSON.stringify(window.store)]).size;
-    if (storeSize > 900000) {
-      setState({ toast: "⚠️ Store is too large for Firebase. Use smaller images or remove products." });
-      clearToast();
-      return;
-    }
-
     await fb.setDoc(fb.doc(fb.db, "stores", "main"), window.store);
     setState({ toast: "✅ Saved to Cloud" });
   } catch (e) {
@@ -1024,7 +1003,7 @@ function bindEvents() {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        const maxSize = 900;
+        const maxSize = 400;
         let { width, height } = img;
         const scale = Math.min(maxSize / width, maxSize / height, 1);
         width = Math.round(width * scale);
@@ -1033,7 +1012,7 @@ function bindEvents() {
         canvas.height = height;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
-        const compressed = canvas.toDataURL("image/jpeg", 0.82);
+        const compressed = canvas.toDataURL("image/jpeg", 0.55);
         setNested("adminForm", {
           image: compressed,
           fileName: file.name
