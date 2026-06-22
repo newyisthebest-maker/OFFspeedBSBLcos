@@ -160,6 +160,11 @@ async function save() {
 
     const fb = window.firebaseServices;
     if (fb?.db) {
+      // Only write to Firestore when a user is signed in.
+      if (!fb.auth?.currentUser) {
+        return;
+      }
+
       await fb.setDoc(
         fb.doc(fb.db, "stores", "main"),
         window.store
