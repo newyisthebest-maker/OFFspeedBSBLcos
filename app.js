@@ -112,7 +112,7 @@ async function initFirebaseSync() {
       await fb.setDoc(ref, starterData);
     }
   } else {
-    window.store = snap.data();
+    window.store = { ...structuredClone(starterData), ...snap.data() };
   }
 
   fb.onSnapshot(ref, (docSnap) => {
