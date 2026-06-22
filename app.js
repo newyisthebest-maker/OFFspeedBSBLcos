@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-async function initFirebaseSync() {
+window.initFirebaseSync = async function initFirebaseSync() {
   const fb = window.firebaseServices;
   if (!fb?.db) {
     window.store = readJson(STORE_KEY, starterData);
