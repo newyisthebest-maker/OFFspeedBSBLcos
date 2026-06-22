@@ -1000,10 +1000,25 @@ function bindEvents() {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      setNested("adminForm", { 
-        image: event.target.result,
-        fileName: file.name 
-      });
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxSize = 400;
+        let { width, height } = img;
+        const scale = Math.min(maxSize / width, maxSize / height, 1);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL("image/jpeg", 0.55);
+        setNested("adminForm", {
+          image: compressed,
+          fileName: file.name
+        });
+      };
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   });
@@ -1224,7 +1239,7 @@ async function login() {
   }
 }
 
-async function publishListing(e) {
+async async function publishListing(e) {
   e.preventDefault();
   const form = window.state.adminForm;
   const product = {
