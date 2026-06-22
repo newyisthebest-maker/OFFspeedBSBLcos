@@ -1224,7 +1224,7 @@ async function login() {
   }
 }
 
-function publishListing(e) {
+async function publishListing(e) {
   e.preventDefault();
   const form = window.state.adminForm;
   const product = {
@@ -1236,7 +1236,7 @@ function publishListing(e) {
     image: form.image,
   };
   window.store.products.unshift(product);
-  save();
+  await save();
   setState({ adminForm: defaultState.adminForm, toast: "Published!" });
   clearToast();
 }
