@@ -1021,12 +1021,17 @@ function bindEvents() {
   document
     .querySelector("[data-action='login']")
     ?.addEventListener("click", login);
-  document.querySelector("[data-action='logout']")?.addEventListener("click", logout);
   document
     .querySelector("[data-action='logout']")
-    ?.addEventListener("click", () =>
-      setState({ user: null, developerUnlocked: false, view: "shopping" })
-    );
+    ?.addEventListener("click", async () => {
+      const fb = window.firebaseServices;
+      try {
+        if (fb?.auth) await fb.signOut(fb.auth);
+      } catch (e) {
+        console.error(e);
+      }
+      setState({ user: null, developerUnlocked: false, view: "shopping" });
+    });
   document
     .querySelector("[data-action='back-shopping']")
     ?.addEventListener("click", () =>
@@ -1167,38 +1172,34 @@ function filteredProducts() {
 }
 
 async function login() {
-  const emailInput = document
-    .querySelector("[data-login-email]")
-    ?.value.trim()
-    .toLowerCase();
-  const nameInput = document
-    .querySelector("[data-login-name]")
-    ?.value.trim();
-  const email = emailInput;
-  const name = nameInput || (email ? email.split("@")[0] : "");
-
-  if (!email?.endsWith("@gmail.com")) {
-    setState({ toast: "Use Gmail" });
+  const fb = window.firebaseServices;
+  if (!fb) {
+    setState({ toast: "Firebase not ready" });
     clearToast();
     return;
   }
 
-  const customer = upsertCustomer(email, name);
+  try {
+    const provider = new fb.GoogleAuthProvider();
+    const result = await fb.signInWithPopup(fb.auth, provider);
+    const user = result.user;
 
-  setState({
-    user: { email, name },
-    menuOpen: false,
-    toast: "Signed in",
-  });
-  clearToast();
+    const email = (user.email || "").toLowerCase();
+    const name = user.displayName || email.split("@")[0];
 
-  const subject = "Thanks for shopping with OFFSPEED BASEBALL";
-  const body =
-    `Hey ${customer?.name || name},\n\n` +
-    `Thanks for shopping with OFFSPEED BASEBALL—you've unlocked some features in your account.\n\n` +
-    `You can now see discount codes, earned codes, and get special offers as your account ages.\n\n` +
-    `Play ball,\nOFFSPEED BASEBALL`;
-  sendEmail(email, subject, body);
+    upsertCustomer(email, name);
+
+    setState({
+      user: { email, name },
+      menuOpen: false,
+      toast: "Signed in",
+    });
+    clearToast();
+  } catch (err) {
+    console.error(err);
+    setState({ toast: "Google sign-in failed" });
+    clearToast();
+  }
 }
 
 function publishListing(e) {
@@ -1388,11 +1389,20 @@ function deleteProduct(productId) {
   clearToast();
 }
 
-async function logout() {
- const fb = window.firebaseServices;
- try { if (fb?.auth) await fb.signOut(fb.auth); } catch(e){console.error(e);}
- setState({user:null,menuOpen:false,toast:"Signed out"});
- clearToast();
-}
-
-window.addEventListener("load",()=>{const fb=window.firebaseServices; if(fb?.auth){fb.onAuthStateChanged(fb.auth,(u)=>{if(u){setState({user:{email:u.email,name:u.displayName||u.email.split("@")[0]}});} else {setState({user:null});}})}});
+window.addEventListener("load", () => {
+  const wait = setInterval(() => {
+    const fb = window.firebaseServices;
+    if (!fb?.auth) return;
+    clearInterval(wait);
+    fb.onAuthStateChanged(fb.auth, (user) => {
+      if (user) {
+        setState({
+          user: {
+            email: (user.email || "").toLowerCase(),
+            name: user.displayName || (user.email || "").split("@")[0]
+          }
+        });
+      }
+    });
+  }, 250);
+});
