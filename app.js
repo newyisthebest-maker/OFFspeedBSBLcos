@@ -1003,7 +1003,7 @@ function bindEvents() {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        const maxSize = 400;
+        const maxSize = 900;
         let { width, height } = img;
         const scale = Math.min(maxSize / width, maxSize / height, 1);
         width = Math.round(width * scale);
@@ -1012,7 +1012,7 @@ function bindEvents() {
         canvas.height = height;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, width, height);
-        const compressed = canvas.toDataURL("image/jpeg", 0.55);
+        const compressed = canvas.toDataURL("image/jpeg", 0.82);
         setNested("adminForm", {
           image: compressed,
           fileName: file.name
