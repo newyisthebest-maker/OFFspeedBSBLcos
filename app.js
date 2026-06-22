@@ -117,7 +117,7 @@ async function initFirebaseSync() {
 
   fb.onSnapshot(ref, (docSnap) => {
     if (docSnap.exists()) {
-      window.store = docSnap.data();
+      window.store = { ...structuredClone(starterData), ...docSnap.data() };
       render();
     }
   });
