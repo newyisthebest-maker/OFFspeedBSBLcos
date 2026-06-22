@@ -161,14 +161,17 @@ async function save() {
       JSON.stringify({ ...window.state, toast: "" })
     );
 
+    // Always keep a local backup so refreshes don't lose data.
+    localStorage.setItem(STORE_KEY, JSON.stringify(window.store));
+
     const fb = window.firebaseServices;
-    if (fb?.db) {
+
+    // Only sync to Firestore when Firebase is loaded and a user is signed in.
+    if (fb?.db && fb.auth?.currentUser) {
       await fb.setDoc(
         fb.doc(fb.db, "stores", "main"),
         window.store
       );
-    } else {
-      localStorage.setItem(STORE_KEY, JSON.stringify(window.store));
     }
   } catch (error) {
     console.error("Storage error:", error);
