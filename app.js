@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-window.initFirebaseSync = async function initFirebaseSync() {
+async function initFirebaseSync() {
   const fb = window.firebaseServices;
   if (!fb?.db) {
     window.store = readJson(STORE_KEY, starterData);
@@ -1021,6 +1021,7 @@ function bindEvents() {
   document
     .querySelector("[data-action='login']")
     ?.addEventListener("click", login);
+  document.querySelector("[data-action='logout']")?.addEventListener("click", logout);
   document
     .querySelector("[data-action='logout']")
     ?.addEventListener("click", () =>
@@ -1165,7 +1166,7 @@ function filteredProducts() {
   );
 }
 
-function login() {
+async function login() {
   const emailInput = document
     .querySelector("[data-login-email]")
     ?.value.trim()
@@ -1386,3 +1387,12 @@ function deleteProduct(productId) {
   setState({ selectedProductId: "", view: "shopping", toast: "Product deleted" });
   clearToast();
 }
+
+async function logout() {
+ const fb = window.firebaseServices;
+ try { if (fb?.auth) await fb.signOut(fb.auth); } catch(e){console.error(e);}
+ setState({user:null,menuOpen:false,toast:"Signed out"});
+ clearToast();
+}
+
+window.addEventListener("load",()=>{const fb=window.firebaseServices; if(fb?.auth){fb.onAuthStateChanged(fb.auth,(u)=>{if(u){setState({user:{email:u.email,name:u.displayName||u.email.split("@")[0]}});} else {setState({user:null});}})}});
