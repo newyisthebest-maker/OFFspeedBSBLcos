@@ -178,6 +178,24 @@ async function save() {
   }
 }
 
+
+async function forceCloudSave() {
+  const fb = window.firebaseServices;
+  if (!fb?.db || !fb.auth?.currentUser) {
+    setState({ toast: "Sign in to save to cloud." });
+    clearToast();
+    return;
+  }
+  try {
+    await fb.setDoc(fb.doc(fb.db, "stores", "main"), window.store);
+    setState({ toast: "✅ Saved to Cloud" });
+  } catch (e) {
+    console.error(e);
+    setState({ toast: "❌ Cloud save failed" });
+  }
+  clearToast();
+}
+
 function setState(patch, options = {}) {
   window.state = { ...window.state, ...patch };
   save();
@@ -316,6 +334,7 @@ function render() {
             )}</div>`
           : ""
       }
+      ${developer ? `<button class="cloud-save-btn" type="button" data-action="cloud-save">💾 Save to Cloud</button>` : ""}
     </div>
   `;
   bindEvents();
@@ -1021,6 +1040,9 @@ function bindEvents() {
   document
     .querySelector("[data-action='login']")
     ?.addEventListener("click", login);
+  document
+    .querySelector("[data-action='cloud-save']")
+    ?.addEventListener("click", forceCloudSave);
   document
     .querySelector("[data-action='logout']")
     ?.addEventListener("click", async () => {
