@@ -1229,11 +1229,11 @@ async function publishListing(e) {
   const form = window.state.adminForm;
   const product = {
     id: generateId(),
-    name: form.name,
-    price: Number(form.price),
-    category: form.category,
-    description: form.description,
-    image: form.image,
+    name: form.name || "",
+    price: Number(form.price) || 0,
+    category: form.category || "Other",
+    description: form.description || "",
+    image: form.image || "",
   };
   window.store.products.unshift(product);
   await save();
