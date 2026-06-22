@@ -168,6 +168,16 @@ async function save() {
 
     // Only sync to Firestore when Firebase is loaded and a user is signed in.
     if (fb?.db && fb.auth?.currentUser) {
+      const storeSize = new Blob([JSON.stringify(window.store)]).size;
+
+      if (storeSize > 900000) {
+        const msg = "⚠️ Store is getting too large for Firebase. Try using smaller images or removing old products.";
+        console.warn(msg, "Current size:", storeSize, "bytes");
+        setState({ toast: msg });
+        clearToast();
+        return;
+      }
+
       await fb.setDoc(
         fb.doc(fb.db, "stores", "main"),
         window.store
@@ -187,6 +197,13 @@ async function forceCloudSave() {
     return;
   }
   try {
+    const storeSize = new Blob([JSON.stringify(window.store)]).size;
+    if (storeSize > 900000) {
+      setState({ toast: "⚠️ Store is too large for Firebase. Use smaller images or remove products." });
+      clearToast();
+      return;
+    }
+
     await fb.setDoc(fb.doc(fb.db, "stores", "main"), window.store);
     setState({ toast: "✅ Saved to Cloud" });
   } catch (e) {
